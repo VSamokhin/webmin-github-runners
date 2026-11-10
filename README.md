@@ -154,7 +154,7 @@ tests/test_module.sh                     # module syntax and rendering, using a 
 python3 tests/make_sample.py /tmp/s.json && tests/render.sh /tmp/s.json > /tmp/page.html  # preview
 ```
 
-Pushing a tag `vX.Y.Z` builds the module and attaches it to a GitHub release, and publishes the collector image to `ghcr.io/vsamokhin/ghrunners-collector`.
+To release, bump `version=` in `webmin/ghrunners/module.info` and `__version__` in the collector, and merge to `main`. The release workflow then tags `vX.Y.Z`, attaches `ghrunners.wbm.gz` to a GitHub release and publishes the collector image to `ghcr.io/vsamokhin/ghrunners-collector`.
 
 ## License
 

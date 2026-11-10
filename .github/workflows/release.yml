@@ -1,38 +1,68 @@
+# Releases happen when the version in webmin/ghrunners/module.info changes on
+# main (and there is no release for it yet), or on a manual run. The workflow
+# creates the vX.Y.Z tag and release, attaches ghrunners.wbm.gz and publishes
+# the collector image to GHCR.
 name: Release
 on:
   push:
-    tags: ["v*.*.*"]
+    branches: [main]
+    paths:
+      - webmin/ghrunners/module.info
+      - collector/ghrunners_collector.py
+      - .github/workflows/release.yml
+  workflow_dispatch:
 permissions:
   contents: write
   packages: write
+concurrency:
+  group: release
+  cancel-in-progress: false
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Check versions match the tag
-        run: |
-          tag=${GITHUB_REF_NAME#v}
-          grep -qx "version=$tag" webmin/ghrunners/module.info || { echo "module.info version != $tag"; exit 1; }
-          grep -q "^__version__ = \"$tag\"" collector/ghrunners_collector.py || { echo "collector version != $tag"; exit 1; }
-      - name: Test
-        run: python3 -m unittest discover -s tests && tests/test_module.sh
-      - name: Build module
-        run: SOURCE_DATE_EPOCH=$(git log -1 --format=%ct) ./build.sh
-      - name: GitHub release
+      - name: Read version
+        id: v
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" dist/ghrunners.wbm.gz --title "$GITHUB_REF_NAME" --generate-notes
+        run: |
+          v=$(sed -n 's/^version=//p' webmin/ghrunners/module.info)
+          grep -q "^__version__ = \"$v\"" collector/ghrunners_collector.py \
+            || { echo "::error::collector __version__ does not match module.info version $v"; exit 1; }
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          if gh release view "v$v" >/dev/null 2>&1; then
+            echo "Release v$v already exists, nothing to do."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Test
+        if: steps.v.outputs.exists != 'true'
+        run: python3 -m unittest discover -s tests && tests/test_module.sh
+      - name: Build module
+        if: steps.v.outputs.exists != 'true'
+        run: SOURCE_DATE_EPOCH=$(git log -1 --format=%ct) ./build.sh
+      - name: GitHub release
+        if: steps.v.outputs.exists != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v=${{ steps.v.outputs.version }}
+          gh release create "v$v" dist/ghrunners.wbm.gz --target "$GITHUB_SHA" \
+            --title "v$v" --generate-notes
       - uses: docker/setup-qemu-action@v3
+        if: steps.v.outputs.exists != 'true'
       - uses: docker/setup-buildx-action@v3
+        if: steps.v.outputs.exists != 'true'
       - uses: docker/login-action@v3
+        if: steps.v.outputs.exists != 'true'
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ github.token }}
       - name: Collector image
+        if: steps.v.outputs.exists != 'true'
         run: |
-          v=${GITHUB_REF_NAME#v}
+          v=${{ steps.v.outputs.version }}
           img=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/ghrunners-collector
           docker buildx build --platform linux/amd64,linux/arm64 --push \
             -t "$img:$v" -t "$img:${v%.*}" -t "$img:latest" \
