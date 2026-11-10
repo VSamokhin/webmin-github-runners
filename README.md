@@ -64,7 +64,7 @@ sudo install -d -o 10001 -m 755 /var/lib/ghrunners   # the collector runs as uid
 docker compose up -d
 ```
 
-This starts the collector and a [read-only Docker socket proxy](https://github.com/Tecnativa/docker-socket-proxy) that allows listing containers and reading their stats, and nothing else. The status file lands in `/var/lib/ghrunners/status.json` on the host. To report free space of more paths, mount them read-only into the collector and add them to `GHR_DISKS`.
+This starts the collector and a [read-only Docker socket proxy](https://github.com/Tecnativa/docker-socket-proxy) that allows listing containers and reading their stats, and nothing else. Keep the proxy on a network that only the collector shares, as the example does: even read-only, the Docker API shows every container's environment variables, so CI jobs or other containers must not be able to reach it. The status file lands in `/var/lib/ghrunners/status.json` on the host. To report free space of more paths, mount them read-only into the collector and add them to `GHR_DISKS`.
 
 **systemd** (no Docker):
 
@@ -83,7 +83,7 @@ Check that it works: `cat /var/lib/ghrunners/status.json`, or look at the collec
 
 Download `ghrunners.wbm.gz` from the [latest release](https://github.com/VSamokhin/webmin-github-runners/releases/latest), then either:
 
-- in Webmin: **Webmin → Webmin Configuration → Webmin Modules → Install Module → From uploaded file**, or
+- in Webmin: **Webmin → Webmin Configuration → Webmin Modules → Install Module**, either *From uploaded file* or *From HTTP or FTP URL* with `https://github.com/VSamokhin/webmin-github-runners/releases/latest/download/ghrunners.wbm.gz`, or
 - on the command line: `sudo /usr/share/webmin/install-module.pl ghrunners.wbm.gz`
 
 Refresh the menu (**Refresh Modules**, or reload the page). The module appears as **System → GitHub Actions Runners**. If the collector writes somewhere other than `/var/lib/ghrunners/status.json`, set the path under **Module Config**.

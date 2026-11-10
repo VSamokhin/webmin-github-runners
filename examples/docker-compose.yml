@@ -22,6 +22,7 @@ services:
       # it in GHR_DISKS, e.g. GHR_DISKS=root=/host/root
       - /:/host/root:ro
     depends_on: [docker-proxy]
+    networks: [default, docker-api]
 
   # Read-only Docker API: only container list and stats are allowed, nothing
   # can be started, stopped or exec'd. Drop this service (and GHR_DOCKER_HOST)
@@ -34,3 +35,11 @@ services:
       POST: 0
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    # Only the collector may reach the proxy: the Docker API shows container
+    # environments. Put it on its own internal network if you add this to a
+    # compose project with other services.
+    networks: [docker-api]
+
+networks:
+  docker-api:
+    internal: true
