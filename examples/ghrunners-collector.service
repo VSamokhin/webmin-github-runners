@@ -1,0 +1,30 @@
+# Run the collector on the host without Docker.
+#   sudo install -m755 collector/ghrunners_collector.py /usr/local/bin/ghrunners-collector
+#   sudo install -m600 examples/collector.env.example /etc/ghrunners.env   # then edit it
+#   sudo cp examples/ghrunners-collector.service /etc/systemd/system/
+#   sudo systemctl enable --now ghrunners-collector
+[Unit]
+Description=GitHub Actions runner status collector
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+EnvironmentFile=/etc/ghrunners.env
+Environment=GHR_OUTPUT=/var/lib/ghrunners/status.json
+ExecStart=/usr/local/bin/ghrunners-collector
+DynamicUser=yes
+StateDirectory=ghrunners
+StateDirectoryMode=0755
+# Uncomment to allow container stats (gives read access to the Docker socket,
+# which is root-equivalent; prefer the socket proxy from docker-compose.yml).
+#SupplementaryGroups=docker
+#Environment=GHR_DOCKER_HOST=unix:///var/run/docker.sock
+Restart=on-failure
+RestartSec=30
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

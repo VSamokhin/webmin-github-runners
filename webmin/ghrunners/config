@@ -1,0 +1,5 @@
+status_file=/var/lib/ghrunners/status.json
+refresh=30
+stale_after=300
+stuck_after=900
+show_hosted=0

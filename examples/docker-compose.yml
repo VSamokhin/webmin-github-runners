@@ -1,0 +1,36 @@
+# Runs the collector next to your runners. The Webmin module on the host reads
+# ./data/status.json (point the module's "Status file" option at it).
+#
+#   cp examples/collector.env.example .env    # fill in repos and token
+#   docker compose -f examples/docker-compose.yml up -d
+services:
+  collector:
+    # Prebuilt image from the releases; or replace these two lines with
+    # `build: ../collector` to build it yourself.
+    image: ghcr.io/vsamokhin/ghrunners-collector:0.1
+    pull_policy: missing
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      GHR_OUTPUT: /data/status.json
+      GHR_DOCKER_HOST: tcp://docker-proxy:2375
+      GHR_PROC: /host/proc
+    volumes:
+      - /var/lib/ghrunners:/data
+      - /proc:/host/proc:ro
+      # Add every path you want free-space numbers for, read-only, and list
+      # it in GHR_DISKS, e.g. GHR_DISKS=root=/host/root
+      - /:/host/root:ro
+    depends_on: [docker-proxy]
+
+  # Read-only Docker API: only container list and stats are allowed, nothing
+  # can be started, stopped or exec'd. Drop this service (and GHR_DOCKER_HOST)
+  # if you don't need container CPU/RAM.
+  docker-proxy:
+    image: tecnativa/docker-socket-proxy:0.3.0
+    restart: unless-stopped
+    environment:
+      CONTAINERS: 1
+      POST: 0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro

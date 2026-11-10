@@ -1,0 +1,59 @@
+index_title=GitHub Actions Runners
+index=module index
+index_updated=Updated $1 ago
+index_autorefresh=Refreshes every $1s
+index_enofile=The status file <tt>$1</tt> does not exist or is not readable.
+index_eempty=The status file <tt>$1</tt> is empty.
+index_ejson=The status file <tt>$1</tt> is not valid JSON: $2
+index_setup=Start <b>ghrunners-collector</b> so that it writes this file, or point the module at the right path in <b>Module Config</b>. See the project README for setup steps.
+index_stale=The status file was last updated $1 ago. Is the collector still running?
+index_schema=The status file uses format version $1, newer than this module understands. Please update the module.
+index_footer=Collector $1 &middot; snapshot $2 UTC &middot; took $3 ms
+
+sum_runners=Runners
+sum_busy=Busy
+sum_idle=Idle
+sum_offline=Offline
+sum_queued=Queued jobs
+sum_rate=GitHub API calls left
+
+state_busy=Busy
+state_idle=Idle
+state_offline=Offline
+
+run_title=Runners
+run_name=Runner
+run_state=State
+run_scope=Registered to
+run_labels=Labels
+run_job=Current job
+run_for=Running for
+run_none=No self-hosted runners found.
+run_otherjob=Job not visible (another repository or not yet reported)
+
+q_title=Queued jobs
+q_job=Job
+q_repo=Repository
+q_labels=Requested labels
+q_waiting=Waiting
+q_state=State
+q_none=Nothing queued.
+q_hosted=GitHub-hosted
+q_nomatch=No online runner has these labels
+q_slow=Waiting unusually long
+q_waiting_for=$1 matching runner(s), all busy
+
+host_title=Host $1
+host_item=Resource
+host_value=Usage
+host_load=CPU load (1 / 5 / 15 min)
+host_cpus=$1 CPUs
+host_mem=Memory
+host_disk=Disk: $1
+host_free=$1 free of $2
+
+c_title=Containers
+c_name=Container
+c_state=State
+c_cpu=CPU
+c_mem=Memory

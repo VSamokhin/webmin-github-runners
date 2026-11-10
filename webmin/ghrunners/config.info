@@ -1,0 +1,7 @@
+line1=Status file,11
+status_file=Path to the collector's status.json,0,50
+stale_after=Warn when the status file is older than (seconds),0,6
+line2=Display,11
+refresh=Auto-refresh the page every (seconds; 0 disables),0,6
+stuck_after=Mark a queued job as slow after (seconds),0,6
+show_hosted=Show queued jobs for GitHub-hosted runners?,1,1-Yes,0-No

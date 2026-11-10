@@ -1,0 +1,15 @@
+<header>GitHub Actions Runners</header>
+
+<p>This module shows the self-hosted GitHub Actions runners of the repositories
+and organizations you watch: which are <b>busy</b> (and with which job), which
+are <b>idle</b> and which are <b>offline</b>. It also lists jobs waiting for a
+runner, and flags jobs that no online runner can take because their labels do
+not match.</p>
+
+<p>The data comes from <tt>ghrunners-collector</tt>, a small service that polls
+the GitHub API and writes a JSON status file. The module only reads that file,
+so it needs no GitHub token. Set the file path under <b>Module Config</b>.</p>
+
+<p>The page refreshes itself; the interval is also set under <b>Module
+Config</b>.</p>
+<footer>
