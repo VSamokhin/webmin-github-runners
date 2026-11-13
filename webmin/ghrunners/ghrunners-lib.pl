@@ -133,6 +133,51 @@ return "<span style='display:inline-block;vertical-align:middle;width:120px;".
        "width:$pct%;background:$c'></span></span>$pct%";
 }
 
+# gauge(fraction, label, detail-html) -> ring gauge HTML, in the style of
+# Webmin's system information dashboard. An undefined fraction draws an empty
+# ring with "-".
+sub gauge
+{
+my ($frac, $label, $detail) = @_;
+my $pi = 3.14159265;
+my $r = 46;
+my $circ = 2 * $pi * $r;
+my ($pct, $arc, $c) = ('-', 0, '#16a34a');
+if (defined($frac)) {
+	$frac = 0 if ($frac < 0);
+	$pct = int($frac * 100 + 0.5);
+	$arc = $circ * ($frac > 1 ? 1 : $frac);
+	$c = $frac >= 0.9 ? '#dc2626' : $frac >= 0.75 ? '#d97706' : '#16a34a';
+	}
+my $ticks = '';
+for (my $i = 0; $i < 40; $i++) {
+	my $a = $i * 2 * $pi / 40;
+	my ($in, $out) = $i % 5 ? (52, 55) : (51, 57);
+	$ticks .= sprintf("<line x1='%.1f' y1='%.1f' x2='%.1f' y2='%.1f'/>",
+			  60 + $in * sin($a), 60 - $in * cos($a),
+			  60 + $out * sin($a), 60 - $out * cos($a));
+	}
+my $aria = &html_escape(defined($frac) ? "$label: $pct%" : $label);
+$aria =~ s/&amp;(\w+;)/&$1/g;
+return "<div class='ghr-gauge' style='width:150px;text-align:center'>".
+       "<svg viewBox='0 0 120 120' width='120' height='120' role='img' ".
+       "aria-label='$aria'>".
+       "<g stroke='currentColor' stroke-opacity='.3' stroke-width='1'>$ticks</g>".
+       "<circle cx='60' cy='60' r='$r' fill='none' stroke='currentColor' ".
+       "stroke-opacity='.12' stroke-width='5'/>".
+       ($arc > 0 ? sprintf("<circle cx='60' cy='60' r='$r' fill='none' ".
+			   "stroke='$c' stroke-width='5' ".
+			   "stroke-dasharray='%.2f %.2f' ".
+			   "transform='rotate(-90 60 60)'/>", $arc, $circ) : "").
+       "<text x='60' y='60' text-anchor='middle' dominant-baseline='central' ".
+       "fill='currentColor' fill-opacity='.8' font-size='26'>$pct".
+       (defined($frac) ? "<tspan font-size='14' dx='1'>%</tspan>" : "").
+       "</text></svg>".
+       "<div style='font-size:85%;font-weight:600;text-transform:uppercase;".
+       "letter-spacing:.03em;opacity:.65'>$label</div>".
+       "<div style='font-size:85%;opacity:.8'>$detail</div></div>";
+}
+
 # size(bytes) -> human size or '-'
 sub size
 {

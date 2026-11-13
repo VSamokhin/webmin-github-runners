@@ -52,6 +52,12 @@ PY
 "$here/render.sh" "$tmp/xss.json" > "$tmp/xss.html"
 grep -q "<script>alert(1)" "$tmp/xss.html" && fail "unescaped runner name"
 
+# Host resources come first and are drawn as ring gauges
+"$here/render.sh" "$tmp/status.json" > "$tmp/gauges.html"
+grep -q "class='ghr-gauge'" "$tmp/gauges.html" || fail "resource gauges missing"
+awk '/ghr-gauges/{g=NR} /GitHub API calls left/{s=NR} END{exit !(g && s && g < s)}' \
+	"$tmp/gauges.html" || fail "resources are not above the summary"
+
 # The release workflow requires the collector and module versions to match
 modv=$(sed -n 's/^version=//p' "$here/../webmin/ghrunners/module.info")
 grep -q "^__version__ = \"$modv\"" "$here/../collector/ghrunners_collector.py" \

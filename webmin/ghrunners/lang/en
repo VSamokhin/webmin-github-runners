@@ -44,13 +44,12 @@ q_slow=Waiting unusually long
 q_waiting_for=$1 matching runner(s), all busy
 
 host_title=Host $1
-host_item=Resource
-host_value=Usage
-host_load=CPU load (1 / 5 / 15 min)
+host_cpu=CPU load
+host_loadavg=Load average, 1 / 5 / 15 min
 host_cpus=$1 CPUs
 host_mem=Memory
 host_disk=Disk: $1
-host_free=$1 free of $2
+host_free=$1 free<br>of $2
 
 c_title=Containers
 c_name=Container

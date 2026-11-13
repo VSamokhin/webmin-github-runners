@@ -3,4 +3,4 @@ desc=GitHub Actions Runners
 longdesc=Shows self-hosted GitHub Actions runners (busy, idle, offline), queued jobs and host resources, read from the status file written by ghrunners-collector.
 category=system
 os_support=*-linux freebsd macos
-version=0.1.1
+version=0.1.2
