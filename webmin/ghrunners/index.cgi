@@ -15,14 +15,15 @@ my $stale_after = int($config{'stale_after'} || 300);
 my $stuck_after = int($config{'stuck_after'} || 900);
 my $show_hosted = $config{'show_hosted'};
 
-# Right-hand status: last update time
+# Last update time. Shown in the page body, not in ui_print_header's right
+# slot: Authentic turns that slot into an icon button bar and clips plain text.
 my $age;
-my $right = '';
+my $updated = '';
 if ($st) {
 	my $t = &iso_to_epoch($st->{'generated_at'});
 	$age = defined($t) ? time() - $t : undef;
-	$right = &text('index_updated', &human_duration($age)).
-		 ($refresh > 0 ? "<br>".&text('index_autorefresh', $refresh) : "");
+	$updated = &text('index_updated', &human_duration($age)).
+		   ($refresh > 0 ? " &middot; ".&text('index_autorefresh', $refresh) : "");
 	}
 
 # Auto refresh. Works with the Authentic theme's in-page navigation: the timer
@@ -35,9 +36,11 @@ if ($refresh > 0) {
 		"},$ms);})();</script>";
 	}
 
-&ui_print_header(undef, $text{'index_title'}, "", "intro", 1, 1, 0, $right,
+&ui_print_header(undef, $text{'index_title'}, "", "intro", 1, 1, 0, undef,
 		 $head);
 print "<div id='ghr-root'>\n";
+print "<p class='ghr-updated' style='margin:0 0 10px;opacity:.7'>",
+      "<small>$updated</small></p>\n" if ($updated);
 
 if (!$st) {
 	print &ui_alert_box($err, 'warn');
