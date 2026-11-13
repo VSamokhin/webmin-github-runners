@@ -1,0 +1,10 @@
+# perlcritic settings for the Webmin module (webmin/ghrunners)
+severity = 4
+verbose = %f:%l:%c: %m (%p, severity %s)\n
+
+# Webmin modules load their library with require './module-lib.pl'.
+[-Modules::RequireBarewordIncludes]
+
+# Webmin's own library redefines functions and passes undef freely.
+[TestingAndDebugging::ProhibitNoWarnings]
+allow = redefine uninitialized

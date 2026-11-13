@@ -129,7 +129,7 @@ print &ui_columns_end();
 my %order = ('busy' => 0, 'idle' => 1, 'offline' => 2);
 my @runners;
 foreach my $s (@scopes) {
-	push(@runners, map { { %$_, 'scope' => $s } } @{$s->{'runners'} || []});
+	push(@runners, map { +{ %$_, 'scope' => $s } } @{$s->{'runners'} || []});
 	}
 @runners = sort { $order{&runner_state($a)} <=> $order{&runner_state($b)} ||
 		  lc($a->{'name'}) cmp lc($b->{'name'}) } @runners;
