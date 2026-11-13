@@ -66,6 +66,37 @@ foreach my $s (grep { $_->{'type'} eq 'org' } @scopes) {
 	push(@{$org_runners{lc($s->{'name'})}}, @{$s->{'runners'} || []});
 	}
 
+# ---- Host resources --------------------------------------------------------
+# Shown first, as ring gauges: CPU load, memory and each disk.
+my $h = $st->{'host'} || {};
+my @gauges;
+if ($h->{'load'}) {
+	my $cpus = $h->{'cpus'} || 1;
+	push(@gauges, &gauge($h->{'load'}->[0] / $cpus, $text{'host_cpu'},
+		"<span title='$text{'host_loadavg'}'>".&html_escape(join(' / ', @{$h->{'load'}}))."</span>"."<br>".
+		&text('host_cpus', $cpus)));
+	}
+if ($h->{'mem_total'}) {
+	my $used = $h->{'mem_total'} - $h->{'mem_available'};
+	push(@gauges, &gauge($used / $h->{'mem_total'}, $text{'host_mem'},
+		&size($used)." / ".&size($h->{'mem_total'})));
+	}
+foreach my $d (@{$h->{'disks'} || []}) {
+	push(@gauges, &gauge($d->{'error'} || !$d->{'total'} ? undef :
+				1 - $d->{'free'} / $d->{'total'},
+		&text('host_disk', &html_escape($d->{'label'})),
+		$d->{'error'} ? &html_escape($d->{'error'}) :
+			&text('host_free', &size($d->{'free'}), &size($d->{'total'}))));
+	}
+if (@gauges) {
+	print &ui_columns_start([ &text('host_title', &html_escape($h->{'hostname'})) ],
+				100);
+	print &ui_columns_row([ "<div class='ghr-gauges' style='display:flex;".
+				"flex-wrap:wrap;gap:8px 28px;padding:6px 0'>".
+				join('', @gauges)."</div>" ]);
+	print &ui_columns_end();
+	}
+
 # ---- Summary -------------------------------------------------------------
 my $sum = $st->{'summary'} || {};
 my @queued;
@@ -176,37 +207,6 @@ foreach my $j (@queued) {
 		]);
 	}
 print &ui_columns_end();
-
-# ---- Host ----------------------------------------------------------------
-my $h = $st->{'host'} || {};
-my @hrows;
-if ($h->{'load'}) {
-	my $cpus = $h->{'cpus'} || 1;
-	push(@hrows, [ $text{'host_load'},
-		       &bar($h->{'load'}->[0] / $cpus).
-		       " <small>".&html_escape(join(' / ', @{$h->{'load'}})).
-		       " &middot; ".&text('host_cpus', $cpus)."</small>" ]);
-	}
-if ($h->{'mem_total'}) {
-	my $used = $h->{'mem_total'} - $h->{'mem_available'};
-	push(@hrows, [ $text{'host_mem'},
-		       &bar($used / $h->{'mem_total'}).
-		       " <small>".&size($used)." / ".&size($h->{'mem_total'})."</small>" ]);
-	}
-foreach my $d (@{$h->{'disks'} || []}) {
-	my $val = $d->{'error'} ? &html_escape($d->{'error'}) :
-		  &bar($d->{'total'} ? 1 - $d->{'free'} / $d->{'total'} : undef).
-		  " <small>".&text('host_free', &size($d->{'free'}), &size($d->{'total'})).
-		  "</small>";
-	push(@hrows, [ &text('host_disk', &html_escape($d->{'label'})), $val ]);
-	}
-if (@hrows) {
-	print &ui_columns_start([ $text{'host_item'}, $text{'host_value'} ], 100,
-				0, [ "width='20%'" ],
-				&text('host_title', &html_escape($h->{'hostname'})));
-	print &ui_columns_row($_, [ "width='20%'" ]) foreach (@hrows);
-	print &ui_columns_end();
-	}
 
 # ---- Containers ----------------------------------------------------------
 if (ref($st->{'containers'}) eq 'ARRAY' && @{$st->{'containers'}}) {

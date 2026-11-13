@@ -1,3 +1,6 @@
+---- Changes since 0.1.1 ----
+Host resources (CPU load, memory, disks) are now the first section and are
+shown as ring gauges.
 ---- Changes since 0.1.0 ----
 The "Updated ... ago / Refreshes every ..." caption is now shown at the top of
 the page instead of in the header, where the Authentic theme clipped it.
