@@ -139,6 +139,7 @@ The JSON written by the collector is a stable interface (`"schema": 1`), so you 
 
 | Symptom | Fix |
 | --- | --- |
+| Installing says "Not a valid Perl module" | That is the **System → Perl Modules** page, which installs CPAN modules. Use **Webmin → Webmin Configuration → Webmin Modules** instead. |
 | "status file does not exist" | The collector isn't running, or writes elsewhere. Check its log and the path in Module Config. |
 | `HTTP 403 Resource not accessible` for a repository | The token lacks **Administration: Read** on that repository, or the repository isn't selected in the token. |
 | `HTTP 401` | Token expired or wrong. |
