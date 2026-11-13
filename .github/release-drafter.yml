@@ -1,0 +1,45 @@
+name-template: "v$RESOLVED_VERSION"
+tag-template: "v$RESOLVED_VERSION"
+tag-prefix: v
+# The draft proposes the next version from the labels of the merged pull
+# requests (default: patch). Edit the tag of the draft to release another
+# version; publishing the draft runs .github/workflows/release.yml.
+version-resolver:
+  major:
+    labels: [major]
+  minor:
+    labels: [minor, feature]
+  patch:
+    labels: [patch, fix, chore, dependencies]
+  default: patch
+categories:
+  - title: Features
+    labels: [feature]
+  - title: Bug Fixes
+    labels: [fix]
+  - title: Maintenance
+    labels: [chore, dependencies]
+# Pull requests are labelled from their branch prefix or from their Conventional
+# Commits title (feat:, fix:, ci:, build:, chore:, docs:, ...).
+autolabeler:
+  - label: feature
+    branch:
+      - '/feature\/.+/'
+    title:
+      - '/^feat(\(.+\))?!?:/i'
+  - label: fix
+    branch:
+      - '/bugfix\/.+/'
+    title:
+      - '/^fix(\(.+\))?!?:/i'
+  - label: chore
+    branch:
+      - '/chore\/.+/'
+    title:
+      - '/^(build|chore|ci|docs|perf|refactor|style|test)(\(.+\))?!?:/i'
+template: |
+  ## Changes
+
+  $CHANGES
+
+  **Full Changelog**: https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...v$RESOLVED_VERSION
