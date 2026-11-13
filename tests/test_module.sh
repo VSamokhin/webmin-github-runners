@@ -52,4 +52,9 @@ PY
 "$here/render.sh" "$tmp/xss.json" > "$tmp/xss.html"
 grep -q "<script>alert(1)" "$tmp/xss.html" && fail "unescaped runner name"
 
+# The release workflow requires the collector and module versions to match
+modv=$(sed -n 's/^version=//p' "$here/../webmin/ghrunners/module.info")
+grep -q "^__version__ = \"$modv\"" "$here/../collector/ghrunners_collector.py" \
+	|| fail "collector __version__ does not match module.info version $modv"
+
 echo "module tests passed"
