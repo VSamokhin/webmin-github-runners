@@ -12,9 +12,11 @@ for f in "$mod"/*.cgi "$mod"/*.pl; do
 done
 
 # Every $text{'x'} / &text('x') key used in code exists in lang/en
-for key in $(grep -ohE "(\\\$text\{'|&text\(')[a-z_]+" "$mod"/*.cgi "$mod"/*.pl | sed -E "s/.*'//" | grep -v '_$' | sort -u); do
+grep -ohE "(\\\$text\{'|&text\(')[a-z_]+" "$mod"/*.cgi "$mod"/*.pl | sed -E "s/.*'//" |
+	grep -v '_$' | sort -u > "$tmp/keys"
+while read -r key; do
 	grep -q "^$key=" "$mod/lang/en" || fail "missing lang key: $key"
-done
+done < "$tmp/keys"
 
 python3 "$here/make_sample.py" "$tmp/status.json"
 "$here/render.sh" "$tmp/status.json" > "$tmp/page.html" 2> "$tmp/err"

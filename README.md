@@ -152,8 +152,15 @@ The JSON written by the collector is a stable interface (`"schema": 1`), so you 
 python3 -m unittest discover -s tests   # collector, against fake GitHub and Docker APIs
 tests/test_module.sh                     # module syntax and rendering, using a Webmin stub
 ./build.sh                               # dist/ghrunners.wbm.gz
+ruff check .                             # Python lint, incl. security rules (ruff.toml)
+perlcritic webmin/ghrunners/*.cgi webmin/ghrunners/*.pl   # Perl lint (.perlcriticrc)
+shellcheck build.sh tests/*.sh && actionlint              # shell scripts and workflows
 python3 tests/make_sample.py /tmp/s.json && tests/render.sh /tmp/s.json > /tmp/page.html  # preview
 ```
+
+### Checks
+
+Every pull request runs the tests, the linters above, a Trivy scan of the collector image (fails on fixable HIGH/CRITICAL issues) and CodeQL for the Python collector and the workflows (CodeQL has no Perl support). Releases scan the image again before pushing it. Third-party actions are pinned to the commit SHA of their latest release; Dependabot proposes updates for them and for the collector's base image weekly.
 
 ### Releases
 

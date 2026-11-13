@@ -34,17 +34,17 @@ return ($data, undef);
 sub iso_to_epoch
 {
 my ($iso) = @_;
-return undef if (!$iso);
+return if (!$iso);
 if ($iso =~ /^(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)(?:\.\d+)?(Z|([+-])(\d\d):?(\d\d))?$/) {
 	my $t = eval { Time::Local::timegm($6, $5, $4, $3, $2 - 1, $1) };
-	return undef if (!defined($t));
+	return if (!defined($t));
 	if ($8) {
 		my $off = ($9 * 3600 + $10 * 60) * ($8 eq '+' ? 1 : -1);
 		$t -= $off;
 		}
 	return $t;
 	}
-return undef;
+return;
 }
 
 # human_duration(seconds) -> "3m 20s"

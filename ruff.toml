@@ -1,0 +1,10 @@
+target-version = "py39"
+line-length = 120
+
+[lint]
+# pyflakes, pycodestyle, bugbear, flake8-bandit (security), pyupgrade, simplify
+select = ["F", "E", "W", "B", "S", "UP", "SIM"]
+
+[lint.per-file-ignores]
+# unittest asserts and fake HTTP servers on localhost are fine in tests
+"tests/*" = ["S101", "S104", "S310", "E501"]

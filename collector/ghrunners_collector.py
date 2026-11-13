@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import concurrent.futures
+import contextlib
 import datetime as dt
 import http.client
 import json
@@ -105,6 +106,8 @@ class GitHub:
 
     def __init__(self, token: str, api_url: str, timeout: float = 20.0):
         self.token = token
+        if urllib.parse.urlsplit(api_url).scheme not in ("https", "http"):
+            raise ValueError(f"GitHub API URL must be http(s): {api_url}")
         self.api_url = api_url.rstrip("/")
         self.timeout = timeout
         self._cache: dict[str, tuple[str, object]] = {}
@@ -124,9 +127,10 @@ class GitHub:
         cached = self._cache.get(url)
         if cached:
             headers["If-None-Match"] = cached[0]
-        req = urllib.request.Request(url, headers=headers)
+        # The scheme of api_url is checked in __init__.
+        req = urllib.request.Request(url, headers=headers)  # noqa: S310
         try:
-            with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+            with urllib.request.urlopen(req, timeout=self.timeout) as resp:  # noqa: S310
                 self._note_rate(resp.headers)
                 body = json.load(resp)
                 etag = resp.headers.get("ETag")
@@ -138,10 +142,8 @@ class GitHub:
             if err.code == 304 and cached:
                 return cached[1]
             detail = ""
-            try:
+            with contextlib.suppress(Exception):  # best effort error text
                 detail = json.load(err).get("message", "")
-            except Exception:  # noqa: BLE001 - best effort error text
-                pass
             raise GitHubError(f"GET {path}: HTTP {err.code} {detail}".strip()) from None
         except (urllib.error.URLError, TimeoutError, OSError) as err:
             raise GitHubError(f"GET {path}: {err}") from None
@@ -368,10 +370,8 @@ def write_atomic(path: str, data: dict) -> None:
         os.chmod(tmp, 0o644)
         os.replace(tmp, path)
     except BaseException:
-        try:
+        with contextlib.suppress(OSError):
             os.unlink(tmp)
-        except OSError:
-            pass
         raise
 
 
@@ -433,7 +433,10 @@ def main(argv: list[str] | None = None) -> int:
         label, sep, path = item.partition("=")
         disks.append((label, path) if sep else (os.path.basename(item.rstrip("/")) or item, item))
 
-    gh = GitHub(token, args.api_url)
+    try:
+        gh = GitHub(token, args.api_url)
+    except ValueError as err:
+        sys.exit(f"ghrunners-collector: {err}")
     docker = Docker(args.docker_host) if args.docker_host else None
 
     stop = False

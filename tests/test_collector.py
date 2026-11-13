@@ -188,6 +188,10 @@ class CollectorTest(unittest.TestCase):
         self.assertGreater(st["host"]["disks"][0]["total"], 0)
         self.assertEqual(st["rate_limit"]["remaining"], 4990)
 
+    def test_api_url_must_be_http(self):
+        with self.assertRaises(ValueError):
+            collector.GitHub("test-token", "file:///etc/passwd")
+
     def test_cpu_percent_from_two_samples(self):
         gh = collector.GitHub("test-token", f"http://127.0.0.1:{self.gh.server_port}")
         docker = collector.Docker(f"unix://{self.sock}")
