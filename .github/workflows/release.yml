@@ -1,16 +1,17 @@
-# Releases happen when the version in webmin/ghrunners/module.info changes on
-# main (and there is no release for it yet), or on a manual run. The workflow
-# creates the vX.Y.Z tag and release, attaches ghrunners.wbm.gz and publishes
-# the collector image to GHCR.
+# Builds a release when you publish the draft that Release Drafter keeps
+# (release-drafter.yml). The version is the release tag (vX.Y.Z): it is stamped
+# into module.info and the collector, the module is attached to the release as
+# ghrunners.wbm.gz and the collector image is pushed to GHCR. "Run workflow"
+# rebuilds the latest release, or a tag you name.
 name: Release
 on:
-  push:
-    branches: [main]
-    paths:
-      - webmin/ghrunners/module.info
-      - collector/ghrunners_collector.py
-      - .github/workflows/release.yml
+  release:
+    types: [published]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to rebuild (empty = latest release)
+        required: false
 permissions:
   contents: write
   packages: write
@@ -21,46 +22,42 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Read version
+      - name: Pick the release
         id: v
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
         run: |
-          v=$(sed -n 's/^version=//p' webmin/ghrunners/module.info)
-          grep -q "^__version__ = \"$v\"" collector/ghrunners_collector.py \
-            || { echo "::error::collector __version__ does not match module.info version $v"; exit 1; }
-          echo "version=$v" >> "$GITHUB_OUTPUT"
-          if gh release view "v$v" >/dev/null 2>&1; then
-            echo "Release v$v already exists, nothing to do."
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          fi
+          tag=${RELEASE_TAG:-$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName)}
+          [[ "$tag" =~ ^v([0-9]+\.[0-9]+\.[0-9]+)$ ]] \
+            || { echo "::error::release tag '$tag' is not vX.Y.Z"; exit 1; }
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.v.outputs.tag }}
+      - name: Stamp the version
+        env:
+          V: ${{ steps.v.outputs.version }}
+        run: |
+          sed -i "s/^version=.*/version=$V/" webmin/ghrunners/module.info
+          sed -i "s/^__version__ = .*/__version__ = \"$V\"/" collector/ghrunners_collector.py
       - name: Test
-        if: steps.v.outputs.exists != 'true'
         run: python3 -m unittest discover -s tests && tests/test_module.sh
       - name: Build module
-        if: steps.v.outputs.exists != 'true'
         run: SOURCE_DATE_EPOCH=$(git log -1 --format=%ct) ./build.sh
-      - name: GitHub release
-        if: steps.v.outputs.exists != 'true'
+      - name: Attach the module to the release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          v=${{ steps.v.outputs.version }}
-          gh release create "v$v" dist/ghrunners.wbm.gz --target "$GITHUB_SHA" \
-            --title "v$v" --generate-notes
+        run: gh release upload "${{ steps.v.outputs.tag }}" dist/ghrunners.wbm.gz --clobber --repo "$GITHUB_REPOSITORY"
       - uses: docker/setup-qemu-action@v3
-        if: steps.v.outputs.exists != 'true'
       - uses: docker/setup-buildx-action@v3
-        if: steps.v.outputs.exists != 'true'
       - uses: docker/login-action@v3
-        if: steps.v.outputs.exists != 'true'
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ github.token }}
       - name: Collector image
-        if: steps.v.outputs.exists != 'true'
         run: |
           v=${{ steps.v.outputs.version }}
           img=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/ghrunners-collector

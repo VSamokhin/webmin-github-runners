@@ -155,7 +155,15 @@ tests/test_module.sh                     # module syntax and rendering, using a 
 python3 tests/make_sample.py /tmp/s.json && tests/render.sh /tmp/s.json > /tmp/page.html  # preview
 ```
 
-To release, bump `version=` in `webmin/ghrunners/module.info` and `__version__` in the collector, and merge to `main`. The release workflow then tags `vX.Y.Z`, attaches `ghrunners.wbm.gz` to a GitHub release and publishes the collector image to `ghcr.io/vsamokhin/ghrunners-collector`.
+### Releases
+
+You choose when to release and which version:
+
+- [Release Drafter](.github/workflows/release-drafter.yml) keeps one draft release for `main`, with the merged pull requests as notes. It proposes the next version from their labels (`major`; `minor` or `feature`; anything else is a patch). Pull requests are labelled from their branch prefix (`feature/`, `bugfix/`, `chore/`) or their Conventional Commits title (`feat:`, `fix:`, `chore:`, ...).
+- To release, open the draft under **Releases**, change its tag if you want another version (`vX.Y.Z`), and publish it.
+- Publishing runs the [release workflow](.github/workflows/release.yml): it stamps the version into `module.info` and the collector, runs the tests, attaches `ghrunners.wbm.gz` to the release and publishes the collector image to `ghcr.io/vsamokhin/ghrunners-collector` (`X.Y.Z`, `X.Y`, `latest`). **Run workflow** on it rebuilds the latest release, or a tag you name.
+
+The versions in the repository are not bumped by hand; the release tag decides.
 
 ## License
 

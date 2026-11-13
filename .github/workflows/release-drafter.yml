@@ -1,0 +1,34 @@
+name: Release drafter
+
+# Labels pull requests from their branch prefix or title and keeps a draft
+# GitHub release for main. Publishing the draft (with the version you choose as
+# its tag) builds and publishes that version (release.yml).
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, reopened, synchronize, edited]
+
+permissions:
+  contents: read
+
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      # Release Drafter v7 split labelling into its own action: on pull requests
+      # only the labels are updated, on main the draft release.
+      - name: Label the pull request
+        if: github.event_name == 'pull_request'
+        uses: release-drafter/release-drafter/autolabeler@978bb0b30c5ee8cdd332ced253758157150d43f0 # v7.10.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Update the draft release
+        if: github.event_name != 'pull_request'
+        uses: release-drafter/release-drafter@978bb0b30c5ee8cdd332ced253758157150d43f0 # v7.10.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
