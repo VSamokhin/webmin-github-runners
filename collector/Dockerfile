@@ -1,4 +1,4 @@
-FROM python:3.13-alpine
+FROM python:3.15-alpine
 LABEL org.opencontainers.image.title="ghrunners-collector" \
       org.opencontainers.image.description="Collects GitHub Actions self-hosted runner status into a JSON file" \
       org.opencontainers.image.licenses="MIT"
